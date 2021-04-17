@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.csw.dao.CloudFileDao">
+	
+	<resultMap id="CloudFileResultMap" type="CloudFile">
+		<id property="id" column="file_id" />
+		<result property="name" column="file_name" />
+		<result property="size" column="file_size" />
+		<result property="fileType" column="file_type" />
+		<result property="uploadTime" column="file_upload_time" javaType="java.sql.Timestamp"/>
+		<result property="status" column="file_status" />
+		<association property="uploadUser" javaType="User">
+			<id property="id" column="file_upload_user_id" />
+			<result property="username" column="username" />
+		</association>
+		
+		<association property="fatherFolder" javaType="Folder">
+			<id property="id" column="file_dir_id" />
+			<result property="path" column="dir_path" />
+		</association>
+	</resultMap>
+	
+	<insert id="addFile" parameterType="CloudFile">
+		INSERT INTO file_inf
+		VALUES (#{file.name},#{file.size},#{file.fileType},#{file.uploadTime},#{file.status},#{file.did},#{file.uid})
+	</insert>
+	
+	<select id="selectFileListByFolderId" resultMap="CloudFileResultMap" >
+		SELECT * FROM file_inf
+		WHERE file_dir_id = #{folderId}
+		ORDER BY file_upload_time DESC
+	</select>
+	
+	<select id="selectFileById" resultMap="CloudFileResultMap" >
+		SELECT * FROM file_inf WHERE file_id = #{fileId}
+	</select>
+	
+	<select id="selectPublicFile" resultMap="CloudFileResultMap">
+		SELECT f.*, d.dir_path, d.dir_id, u.user_id, u.username
+		FROM file_inf f, dir_inf d, user_inf u
+		WHERE f.file_status = 1 AND f.file_dir_id = d.dir_id AND f.file_upload_user_id = u.user_id
+	</select>
+	
+	<select id="selectFileByFileName" resultMap="CloudFileResultMap" >
+		SELECT * FROM file_inf 
+		WHERE file_name = #{params.fileName} AND file_upload_user_id = #{params.userId} AND file_dir_id = #{params.dirId}
+	</select>
+	
+	<delete id="deleteFileById" >
+		DELETE FROM file_inf WHERE file_id = #{fileId}
+	</delete>
+	
+	<delete id="deleteFileByFolderId" >
+		DELETE FROM file_inf WHERE file_dir_id = #{folderId}
+	</delete>
+	
+	<select id="selectPhotoByUserId"  resultMap="CloudFileResultMap">
+		SELECT * FROM file_inf 
+		WHERE file_upload_user_id = #{userId}
+			AND (file_type = 'gif' OR file_type = 'png' OR file_type='jpg' OR file_type = 'jpeg' OR file_type = 'ico')
+		ORDER BY file_upload_time DESC
+	</select>
+	
+	<select id="selectDocumentByUserId"  resultMap="CloudFileResultMap">
+		SELECT * FROM file_inf 
+		WHERE file_upload_user_id = #{userId}
+			AND (file_type = 'docx' OR file_type = 'doc' OR file_type='ppt' OR file_type = 'pptx' 
+				OR file_type = 'xls' OR file_type = 'xlsx' OR file_type='txt')
+		ORDER BY file_upload_time DESC
+	</select>
+	
+	<select id="selectMusicByUserId"  resultMap="CloudFileResultMap">
+		SELECT * FROM file_inf 
+		WHERE file_upload_user_id = #{userId}
+			AND (file_type = 'mp3' OR file_type = 'wma' OR file_type='flac' OR file_type = 'aac' 
+				OR file_type = 'wav' OR file_type = 'mmf' OR file_type='m4a')
+		ORDER BY file_upload_time DESC
+	</select>
+	
+	<select id="selectMovieByUserId"  resultMap="CloudFileResultMap">
+		SELECT * FROM file_inf 
+		WHERE file_upload_user_id = #{userId}
+			AND (file_type = 'mp4' OR file_type = 'mkv' OR file_type='rmvb' OR file_type = 'avi' 
+				OR file_type = 'wma' OR file_type = 'rm' OR file_type='3gp')
+		ORDER BY file_upload_time DESC
+	</select>
+	
+	<select id="selectZipByUserId"  resultMap="CloudFileResultMap">
+		SELECT * FROM file_inf 
+		WHERE file_upload_user_id = #{userId}
+			AND (file_type = 'zip' OR file_type = 'rar' OR file_type='7z' OR file_type = 'cab')
+		ORDER BY file_upload_time DESC
+	</select>
+	
+	<update id="changeFileAccessByFileId" >
+		UPDATE file_inf SET file_status = #{params.access}
+		WHERE file_id = #{params.fileId}
+	</update>
+</mapper>
